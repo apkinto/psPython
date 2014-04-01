@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<psConfiguration>
+  <variableList>
+    <psInputDirectory>D:\Python\ps\UnitTestData\xmlInput</psInputDirectory>
+    <psOutputDirectory>D:\Python\ps</psOutputDirectory>
+    <!--<psXml>Simple.xml</psXml>-->
+    <!--<resource>R2</resource>-->
+	<psXml>Vision.xml</psXml>
+	<resource>MIXER1</resource>
+  </variableList>
+</psConfiguration>
