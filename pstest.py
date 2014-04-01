@@ -82,11 +82,11 @@ def	psGetOp(model, outputDir):
 	with open(outFile, "w") as f:
 		for name, v in operations.iteritems():
 			a = v.getActivity()
-			print a.code
+			#print a.code
 			attrValues = ps.model.Activity.getAttributeValues(a)
 			for av in attrValues:
 				f.writelines([name, 2*"\t", v.code, 2*"\t", av.code, "\n"])
-				print name, v.code, "--->", av.code
+				#print name, v.code, "--->", av.code
 			#v.getAttributeValues()
 	end = getTime()
 	print "...Completed getting Operations:\t\t", end-start, "seconds\n"
@@ -105,17 +105,23 @@ def	psGetAttr(model, outputDir):
 	#val = ps.model.Attribute.getValues(attr['Colour'])
 	#print val[0].code, val[0].display, val[0].notes
 
+def psGetWoAi(workOrders, woCode):
+	woAi = workOrders[woCode].getPeggedInstances()
+	for ai in woAi:
+		print ai.code, ai.display, ai.span
+	
 def psRemoveIdle(model, res):
 	resource= model.findResource(res)
 	resSeq = model.solution.findResourceSchedule(resource)
 	model.solution.repairMode = ps.ms.repairMode.unconstrained		# Set to Whiteboard mode
 	manualSchedule = ps.ms.service(model.schedule)
-	manualSchedule.pasteActivityInstances([resSeq[1], resSeq[0]], resource, datetime.datetime(2014, 4, 14, 10, 0), ps.ms.resequencingMode.singleStage)
+	newStart = resSeq[0].span[0]
+	for op in resSeq:
+		print op.code, op.display, op.span, op.duration, newStart
+		manualSchedule.pasteActivityInstances([op], resource, newStart, ps.ms.resequencingMode.singleStage)
+		newStart = newStart + op.duration
 	model.repair()	
-	resSeq = model.solution.findResourceSchedule(resource)
-	for ai in resSeq:
-		print ai.code, ai.display, ai.span
-		
+
 	
 '''
 def	psManSched(model, woNumber, operation):
@@ -151,8 +157,10 @@ if __name__ == "__main__":
 	WO = psGetWo(myModel, outDir)
 	#a = ps.model.AttributeVector()
 	psGetOp(myModel, outDir)
+	#psGetWoAi(WO, "2")
 	psRemoveIdle(myModel, variables['resource'])
 	#psManSched(myModel, '1', 'op20')
+	
 	
 	psSaveDxt(myModel, outDir, modelXml)
 	
