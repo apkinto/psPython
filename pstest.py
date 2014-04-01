@@ -110,16 +110,31 @@ def psGetWoAi(workOrders, woCode):
 	for ai in woAi:
 		print ai.code, ai.display, ai.span
 	
-def psRemoveIdle(model, res):
+def psRemoveIdle(model, res, start, type):
+	''' 
+		Usage: psRemoveIdle(myModel, variables['resource'], datetime.datetime(2014, 4, 14, 6, 30, 30), 'Single')
+		Usage: psRemoveIdle(myModel, variables['resource'], None, 'Multi')
+	'''
+	duration = datetime.timedelta(0)
+	idleFence = datetime.timedelta(hours=40)
 	resource= model.findResource(res)
 	resSeq = model.solution.findResourceSchedule(resource)
+	if type == 'Single':
+		mode = ps.ms.resequencingMode.singleStage
+	else:
+		mode = ps.ms.resequencingMode.multiStage
+	if start == None:
+		newStart = resSeq[0].span[0]
+	else:
+		newStart = start
 	model.solution.repairMode = ps.ms.repairMode.unconstrained		# Set to Whiteboard mode
 	manualSchedule = ps.ms.service(model.schedule)
-	newStart = resSeq[0].span[0]
 	for op in resSeq:
-		print op.code, op.display, op.span, op.duration, newStart
-		manualSchedule.pasteActivityInstances([op], resource, newStart, ps.ms.resequencingMode.singleStage)
-		newStart = newStart + op.duration
+		if duration < idleFence: 
+			#print op.code, op.display, op.span, op.duration, newStart
+			manualSchedule.pasteActivityInstances([op], resource, newStart, mode)
+			newStart = newStart + op.duration
+			duration = duration + op.duration
 	model.repair()	
 
 	
@@ -158,7 +173,7 @@ if __name__ == "__main__":
 	#a = ps.model.AttributeVector()
 	psGetOp(myModel, outDir)
 	#psGetWoAi(WO, "2")
-	psRemoveIdle(myModel, variables['resource'])
+	psRemoveIdle(myModel, variables['resource'], None, 'Single')
 	#psManSched(myModel, '1', 'op20')
 	
 	
